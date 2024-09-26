@@ -31,6 +31,7 @@ class MCEvaluator(AbstractEvaluator):
         for _ in range(num_episodes):
             episode = self._generate_episode(policy)
             self._update_value_function(episode)
+
         return self.value_fun.copy()
 
     def _generate_episode(self, policy: AbstractPolicy) -> List[Tuple[int, int, float]]:
@@ -51,10 +52,24 @@ class MCEvaluator(AbstractEvaluator):
 
         return episode
 
+
+
     def _update_value_function(self, episode: List[Tuple[int, int, float]]) -> None:
         """
         Update the value function using the Monte Carlo method.
 
         :param episode: A list of (state, action, reward) tuples.
         """
-        pass
+        visited_states = set()  # To keep track of first visits
+    
+        G = 0
+        for e in reversed(range(len(episode))): # for each step of the episode
+            state, action, reward = episode[e]
+            G = reward + self.env.discount_factor*G
+            if state not in visited_states:
+                visited_states.add(state)
+                
+                self.returns[state].append(G)
+                self.value_fun[state] = np.mean(self.returns[state])
+            
+        
